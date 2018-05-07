@@ -47,21 +47,19 @@ def main():
             os.wait()
         sys.exit()
 
-
     unpack = struct.Struct("!f").unpack
-
     timeouts = queue.PriorityQueue()
 
     def consumer():
-        sleep_time = 0.1
+        sleep_default = 0.02
         rpush = redis.StrictRedis(unix_socket_path="run/redis.sock").rpush
         while True:
             now = time.monotonic()
-            wait = sleep_time
+            wait = sleep_default
             while timeouts.queue:
                 deadline = timeouts.queue[0].deadline
                 if deadline > now:
-                    wait = min(deadline - now, sleep_time)
+                    wait = min(deadline - now, sleep_default)
                     break
                 timeout = timeouts.get()
                 key, _, data = timeout.data.partition(b'\t')
@@ -69,7 +67,6 @@ def main():
                 #print(key, data, flush=True)
             #print('sleep', wait, file=sys.stderr)
             time.sleep(wait)
-
     threading.Thread(target=consumer).start()
 
     while True:
