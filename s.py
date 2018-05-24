@@ -4,6 +4,7 @@
 
 import os
 import queue
+import signal
 import socket
 import struct
 import sys
@@ -35,17 +36,26 @@ def main():
         if not pid:
             break
         l_procs.append(pid)
+
     else:
+        def term(signal_number=None, stack_frame=None):
+            for pid in l_procs:
+                os.kill(pid, signal.SIGTERM)
+                os.wait()
+            if signal_number:
+                sys.exit()
+
+        signal.signal(signal.SIGTERM, term)
+
         try:
             while True:
                 input()
-        except (Exception, KeyboardInterrupt) as e:
+        except SystemExit:
+            return
+        except (Exception, KeyboardInterrupt):
             import traceback
             traceback.print_exc()
-        for pid in l_procs:
-            os.kill(pid, 15)
-            os.wait()
-        sys.exit()
+            return term()
 
     unpack = struct.Struct("!f").unpack
     timeouts = queue.PriorityQueue()
