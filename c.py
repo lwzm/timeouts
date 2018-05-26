@@ -1,25 +1,46 @@
 #!/usr/bin/env python3
 
 
-
-import os
-import time
+import json
+import random
 import socket
 import struct
-import random
+
+import redis
 
 
 _struct = struct.Struct("!f")
 
+sock = socket.socket(type=socket.SOCK_DGRAM)
+sock.connect(('localhost', 54321))
+
+blpop = redis.StrictRedis(unix_socket_path="run/redis.sock").blpop
+
+
+def schedule(delay, k, v):
+    s = k + "\t" + json.dumps(v)
+    data = _struct.pack(delay) + s.encode()
+    try:
+        sock.send(data)
+    except ConnectionRefusedError:
+        pass
+
+
+def ready(k, timeout=60):
+    payload = blpop(k, timeout)
+    if payload:
+        return json.loads(payload[1])
+
 
 def main():
-    sock = socket.socket(type=socket.SOCK_DGRAM)
-    sock.connect(('localhost', 1111))
-
+    #while True:
+    #    print(ready("tt"))
     while True:
         s = input()
-        for i in range(1000*10):
-            sock.send(_struct.pack(random.random() * 10) + f"t\t{i}".encode())
+        n = 1000 * 10
+        n = 100
+        for i in range(n):
+            schedule(random.random() * 10, "tt", i)
 
 
 if __name__ == "__main__":

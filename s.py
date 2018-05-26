@@ -27,7 +27,7 @@ class Timeout():
 
 def main():
     sock = socket.socket(type=socket.SOCK_DGRAM)
-    sock.bind(('localhost', 1111))
+    sock.bind(('localhost', 54321))
 
     n_procs = int(os.getenv("N", 1))
     l_procs = []
