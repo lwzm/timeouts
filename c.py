@@ -36,7 +36,7 @@ def main():
     #while True:
     #    print(ready("tt"))
     while True:
-        s = input()
+        s = input("press any to continue...")
         n = 1000 * 10
         n = 100
         for i in range(n):
