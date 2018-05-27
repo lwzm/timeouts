@@ -52,34 +52,6 @@ def server():
     so = socket.socket(type=socket.SOCK_DGRAM)
     so.bind(('localhost', 54321))
 
-    n_procs = int(os.getenv("N", 1))
-    l_procs = []
-    for i in range(n_procs):
-        pid = os.fork()
-        if not pid:
-            break
-        l_procs.append(pid)
-
-    else:
-        def term(signal_number=None, stack_frame=None):
-            for pid in l_procs:
-                os.kill(pid, signal.SIGTERM)
-                os.wait()
-            if signal_number:
-                sys.exit()
-
-        signal.signal(signal.SIGTERM, term)
-
-        try:
-            while True:
-                input()
-        except SystemExit:
-            return
-        except (Exception, KeyboardInterrupt):
-            import traceback
-            traceback.print_exc()
-            return term()
-
     unpack = struct.Struct("!f").unpack
     timeouts = queue.PriorityQueue()
 
