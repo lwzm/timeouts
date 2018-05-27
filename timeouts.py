@@ -14,14 +14,6 @@ import time
 import redis
 
 
-
-_sock = socket.socket(type=socket.SOCK_DGRAM)
-_sock.connect(('localhost', 54321))
-
-_struct = struct.Struct("!f")
-_blpop = redis.StrictRedis(unix_socket_path="run/redis.sock").blpop
-
-
 class Timeout():
     __slots__ = ["deadline", "data"]
 
@@ -33,19 +25,31 @@ class Timeout():
         return self.deadline < other.deadline
 
 
-def schedule(delay, k, v):
-    s = k + "\t" + json.dumps(v)
-    data = _struct.pack(delay) + s.encode()
-    try:
-        _sock.send(data)
-    except ConnectionRefusedError:
-        pass
+def _udp_conn(addr):
+    so = socket.socket(type=socket.SOCK_DGRAM)
+    so.connect(addr)
+    return so
 
 
-def ready(k, timeout=60):
-    payload = _blpop(k, timeout)
-    if payload:
-        return json.loads(payload[1])
+class api(object):
+    _struct = struct.Struct("!f")
+    _blpop = redis.StrictRedis(unix_socket_path="run/redis.sock").blpop
+    _sock = _udp_conn(('localhost', 54321))
+
+    @classmethod
+    def schedule(cls, delay, k, v):
+        s = k + "\t" + json.dumps(v)
+        data = cls._struct.pack(delay) + s.encode()
+        try:
+            cls._sock.send(data)
+        except ConnectionRefusedError:
+            pass
+
+    @classmethod
+    def ready(cls, k, timeout=60):
+        payload = cls._blpop(k, timeout)
+        if payload:
+            return json.loads(payload[1])
 
 
 def server():
@@ -87,12 +91,12 @@ def client():
         n = 1000 * 10
         n = 100
         for i in range(n):
-            schedule(random.random() * 10, "tt", i)
+            api.schedule(random.random() * 10, "tt", i)
 
 
 def test():
     while True:
-        print(ready("tt"))
+        print(api.ready("tt"))
 
 
 if __name__ == "__main__":
