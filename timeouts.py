@@ -32,16 +32,16 @@ def _udp_conn(addr):
 
 
 class api(object):
-    _struct = struct.Struct("!f")
+    _pack = struct.Struct("!f").pack
+    _send = _udp_conn(('localhost', 54321)).send
     _blpop = redis.StrictRedis(unix_socket_path="run/redis.sock").blpop
-    _sock = _udp_conn(('localhost', 54321))
 
     @classmethod
     def schedule(cls, delay, k, v):
         s = k + "\t" + json.dumps(v)
-        data = cls._struct.pack(delay) + s.encode()
+        data = cls._pack(delay) + s.encode()
         try:
-            cls._sock.send(data)
+            cls._send(data)
         except ConnectionRefusedError:
             pass
 
