@@ -14,6 +14,9 @@ import time
 import redis
 
 
+_struct_number = struct.Struct("!f")
+
+
 class Timeout():
     __slots__ = ["deadline", "data"]
 
@@ -32,23 +35,23 @@ def _udp_conn(addr):
 
 
 class api(object):
-    _pack = struct.Struct("!f").pack
+    _pack = _struct_number.pack
     _send = _udp_conn(('localhost', 54321)).send
-    _blpop = redis.StrictRedis(unix_socket_path="run/redis.sock").blpop
+    _wait = redis.StrictRedis(unix_socket_path="run/redis.sock").blpop
 
     @classmethod
-    def schedule(cls, delay, k, v):
-        s = k + "\t" + json.dumps(v)
-        data = cls._pack(delay) + s.encode()
+    def schedule(cls, delay, value):
+        data = cls._pack(delay) + json.dumps(value).encode()
         try:
             cls._send(data)
         except ConnectionRefusedError:
             pass
 
     @classmethod
-    def ready(cls, k, timeout=60):
-        payload = cls._blpop(k, timeout)
+    def ready(cls):
+        payload = cls._wait("-timeouts-")
         if payload:
+            print(payload)
             return json.loads(payload[1])
 
 
@@ -56,7 +59,7 @@ def server():
     so = socket.socket(type=socket.SOCK_DGRAM)
     so.bind(('localhost', 54321))
 
-    unpack = struct.Struct("!f").unpack
+    unpack = _struct_number.unpack
     timeouts = queue.PriorityQueue()
 
     def consumer():
@@ -71,18 +74,18 @@ def server():
                     wait = min(deadline - now, sleep_default)
                     break
                 timeout = timeouts.get()
-                key, _, data = timeout.data.partition(b'\t')
-                rpush(key, data)
-                #print(key, data, flush=True)
+                rpush("-timeouts-", timeout.data)
+                #print(data, flush=True)
             #print('sleep', wait, file=sys.stderr)
             time.sleep(wait)
     threading.Thread(target=consumer).start()
 
+    n = _struct_number.size
     while True:
-        data = so.recv(4096)
-        delay, = unpack(data[:4])
+        data = so.recv(1024 * 16)
+        delay, = unpack(data[:n])
         deadline = time.monotonic() + delay
-        timeouts.put(Timeout(deadline, data[4:]))
+        timeouts.put(Timeout(deadline, data[n:]))
 
 
 def client():
@@ -91,12 +94,12 @@ def client():
         n = 1000 * 10
         n = 100
         for i in range(n):
-            api.schedule(random.random() * 10, "tt", i)
+            api.schedule(random.random() * 10, i)
 
 
 def test():
     while True:
-        print(api.ready("tt"))
+        print(api.ready())
 
 
 if __name__ == "__main__":
