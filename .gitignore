@@ -3,4 +3,6 @@ __pycache__/
 this/
 build/
 dist/
+run/
+log/
 *.egg-info

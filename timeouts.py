@@ -101,6 +101,19 @@ def test():
         print(api.ready())
 
 
+def loop():
+    import this
+    import traceback
+    while True:
+        task = api.ready()
+        try:
+            op = task.pop("op")
+            op = getattr(this, op)
+            op.do(task)
+        except Exception:
+            traceback.print_exc()
+
+
 if __name__ == "__main__":
     try:
         fn = sys.argv[1]
@@ -113,5 +126,7 @@ if __name__ == "__main__":
         client()
     elif fn == "t":
         test()
+    elif fn == "l":
+        loop()
     else:
         pass
