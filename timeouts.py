@@ -51,7 +51,6 @@ class api(object):
     def ready(cls):
         payload = cls._wait("-timeouts-")
         if payload:
-            print(payload)
             return json.loads(payload[1])
 
 
