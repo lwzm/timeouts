@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import json
 import os
+import pickle
 import queue
 import random
 import signal
@@ -41,7 +41,7 @@ class api(object):
 
     @classmethod
     def schedule(cls, delay, value):
-        data = cls._pack(delay) + json.dumps(value).encode()
+        data = cls._pack(delay) + pickle.dumps(value)
         try:
             cls._send(data)
         except ConnectionRefusedError:
@@ -51,7 +51,7 @@ class api(object):
     def ready(cls):
         payload = cls._wait("-timeouts-")
         if payload:
-            return json.loads(payload[1])
+            return pickle.loads(payload[1])
 
 
 def server():
