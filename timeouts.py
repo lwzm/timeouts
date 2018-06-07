@@ -107,9 +107,9 @@ def loop():
     while True:
         task = api.ready()
         try:
-            op = task.pop("op")
-            op = getattr(this, op)
-            op.do(**task)
+            m = task.pop(">")
+            m = getattr(this, m)
+            m.do(**task)
         except Exception:
             traceback.print_exc()
 
@@ -124,9 +124,9 @@ if __name__ == "__main__":
         server()
     elif fn == "c":
         client()
-    elif fn == "t":
+    elif fn == "test":
         test()
-    elif fn == "l":
+    elif fn == "run":
         loop()
     else:
         pass
