@@ -26,12 +26,6 @@ class Timeout():
         return self.deadline < other.deadline
 
 
-def _udp_conn(addr):
-    so = socket.socket(type=socket.SOCK_DGRAM)
-    so.connect(addr)
-    return so
-
-
 def _init_mq():
     try:
         from posix_ipc import MessageQueue
@@ -42,22 +36,28 @@ def _init_mq():
     return MessageQueue(key, flags=os.O_CREAT)
 
 
-class api(object):
-    _pack = _struct_number.pack
-    _send = _udp_conn(('localhost', 54321)).send
-    _wait = _init_mq().receive
+class Api(object):
+    def __init__(self):
+        mq = _init_mq()
+        so = socket.socket(type=socket.SOCK_DGRAM)
+        so.connect(('localhost', 54321))
+        self._pack = _struct_number.pack
+        self._send = so.send
+        self._wait = mq.receive
 
-    @classmethod
-    def schedule(cls, delay, value):
-        data = cls._pack(delay) + pickle.dumps(value)
+    def schedule(self, delay, value):
+        data = self._pack(delay) + pickle.dumps(value)
         try:
-            cls._send(data)
+            self._send(data)
         except ConnectionRefusedError:
             pass
 
-    @classmethod
-    def ready(cls):
-        return cls._wait()[0]
+    def ready(self):
+        return self._wait()[0]
+
+
+api = Api()
+schedule, ready = api.schedule, api.ready
 
 
 def server():
@@ -99,19 +99,19 @@ def client():
         n = 1000 * 10
         n = 100
         for i in range(n):
-            api.schedule(random.random() * 10, i)
+            schedule(random.random() * 10, i)
 
 
 def test():
     while True:
-        print(api.ready())
+        print(ready())
 
 
 def loop():
     import this
     import traceback
     while True:
-        task = api.ready()
+        task = ready()
         try:
             m = task.pop(">")
             m = getattr(this, m)
