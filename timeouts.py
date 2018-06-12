@@ -96,8 +96,8 @@ def server():
 def client():
     while True:
         s = input("press any to continue...")
-        n = 100
         n = 1000 * 10
+        n = 100
         for i in range(n):
             api.schedule(random.random() * 10, i)
 
