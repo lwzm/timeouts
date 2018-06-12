@@ -11,8 +11,6 @@ import sys
 import threading
 import time
 
-import redis
-
 
 _struct_number = struct.Struct("!f")
 
@@ -34,10 +32,20 @@ def _udp_conn(addr):
     return so
 
 
+def _init_mq():
+    try:
+        from posix_ipc import MessageQueue
+        key = "/timeouts"
+    except ImportError:
+        from sysv_ipc import MessageQueue
+        key = 54321
+    return MessageQueue(key, flags=os.O_CREAT)
+
+
 class api(object):
     _pack = _struct_number.pack
     _send = _udp_conn(('localhost', 54321)).send
-    _wait = redis.StrictRedis(unix_socket_path="run/redis.sock").blpop
+    _wait = _init_mq().receive
 
     @classmethod
     def schedule(cls, delay, value):
@@ -49,9 +57,7 @@ class api(object):
 
     @classmethod
     def ready(cls):
-        payload = cls._wait("-timeouts-")
-        if payload:
-            return pickle.loads(payload[1])
+        return cls._wait()[0]
 
 
 def server():
@@ -63,7 +69,7 @@ def server():
 
     def consumer():
         sleep_default = 0.02
-        rpush = redis.StrictRedis(unix_socket_path="run/redis.sock").rpush
+        do = _init_mq().send
         while True:
             now = time.monotonic()
             wait = sleep_default
@@ -73,7 +79,7 @@ def server():
                     wait = min(deadline - now, sleep_default)
                     break
                 timeout = timeouts.get()
-                rpush("-timeouts-", timeout.data)
+                do(timeout.data)
                 #print(data, flush=True)
             #print('sleep', wait, file=sys.stderr)
             time.sleep(wait)
@@ -90,8 +96,8 @@ def server():
 def client():
     while True:
         s = input("press any to continue...")
-        n = 1000 * 10
         n = 100
+        n = 1000 * 10
         for i in range(n):
             api.schedule(random.random() * 10, i)
 
