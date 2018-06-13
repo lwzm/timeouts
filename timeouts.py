@@ -57,7 +57,10 @@ class Api(object):
 
 
 api = Api()
-schedule, ready = api.schedule, api.ready
+
+def schedule(delay, next, **value):
+    value[">"] = next
+    api.schedule(delay, value)
 
 
 def server():
@@ -99,19 +102,19 @@ def client():
         n = 1000 * 10
         n = 100
         for i in range(n):
-            schedule(random.random() * 10, i)
+            api.schedule(random.random() * 10, i)
 
 
 def test():
     while True:
-        print(ready())
+        print(pickle.loads(api.ready()))
 
 
 def loop():
     import this
     import traceback
     while True:
-        task = ready()
+        task = api.ready()
         try:
             m = task.pop(">")
             m = getattr(this, m)
