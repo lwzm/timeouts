@@ -65,7 +65,7 @@ def schedule(delay, next, **value):
 
 def server():
     so = socket.socket(type=socket.SOCK_DGRAM)
-    so.bind(('localhost', 54321))
+    so.bind(("", 54321))
 
     unpack = _struct_number.unpack
     timeouts = queue.PriorityQueue()
