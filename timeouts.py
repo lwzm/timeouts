@@ -5,7 +5,6 @@ import pickle
 import queue
 import random
 import signal
-import socket
 import struct
 import sys
 import threading
@@ -38,19 +37,13 @@ def _init_mq(n):
 
 class Api(object):
     def __init__(self):
-        mq = _init_mq(54321)
-        so = socket.socket(type=socket.SOCK_DGRAM)
-        so.connect(('localhost', 54321))
         self._pack = _struct_number.pack
-        self._send = so.send
-        self._wait = mq.receive
+        self._send = _init_mq(54320).send
+        self._wait = _init_mq(54321).receive
 
     def schedule(self, delay, value):
         data = self._pack(delay) + pickle.dumps(value)
-        try:
-            self._send(data)
-        except ConnectionRefusedError:
-            pass
+        self._send(data)
 
     def ready(self):
         return self._wait()[0]
@@ -64,15 +57,11 @@ def schedule(delay, next, **value):
 
 
 def server():
-    so = socket.socket(type=socket.SOCK_DGRAM)
-    so.bind(("", 54321))
-
-    unpack = _struct_number.unpack
     timeouts = queue.PriorityQueue()
 
     def consumer():
         sleep_default = 0.02
-        do = _init_mq(54321).send
+        send = _init_mq(54321).send
         while True:
             now = time.monotonic()
             wait = sleep_default
@@ -82,19 +71,26 @@ def server():
                     wait = min(deadline - now, sleep_default)
                     break
                 timeout = timeouts.get()
-                do(timeout.data)
+                send(timeout.data)
                 #print(data, flush=True)
             #print('sleep', wait, file=sys.stderr)
             time.sleep(wait)
     threading.Thread(target=consumer).start()
 
     n = _struct_number.size
+    wait = _init_mq(54320).receive
+    unpack = _struct_number.unpack
     while True:
-        data = so.recv(1024 * 16)
+        data = wait()[0]
         delay, = unpack(data[:n])
         deadline = time.monotonic() + delay
         timeouts.put(Timeout(deadline, data[n:]))
 
+
+def server_():
+    pass
+if not __debug__:
+    server = server_
 
 def client():
     while True:
