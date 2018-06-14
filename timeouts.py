@@ -26,19 +26,19 @@ class Timeout():
         return self.deadline < other.deadline
 
 
-def _init_mq():
+def _init_mq(n):
     try:
         from posix_ipc import MessageQueue
-        key = "/timeouts"
+        key = f"/.{n}"
     except ImportError:
         from sysv_ipc import MessageQueue
-        key = 54321
+        key = n
     return MessageQueue(key, flags=os.O_CREAT)
 
 
 class Api(object):
     def __init__(self):
-        mq = _init_mq()
+        mq = _init_mq(54321)
         so = socket.socket(type=socket.SOCK_DGRAM)
         so.connect(('localhost', 54321))
         self._pack = _struct_number.pack
@@ -72,7 +72,7 @@ def server():
 
     def consumer():
         sleep_default = 0.02
-        do = _init_mq().send
+        do = _init_mq(54321).send
         while True:
             now = time.monotonic()
             wait = sleep_default
