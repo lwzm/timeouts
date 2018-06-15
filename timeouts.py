@@ -4,7 +4,6 @@ import os
 import pickle
 import queue
 import random
-import signal
 import struct
 import sys
 import threading
