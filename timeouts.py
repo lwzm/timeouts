@@ -64,17 +64,16 @@ def server():
         send = _init_mq(54321).send
         while True:
             now = time.monotonic()
-            wait = sleep_default
+            secs = sleep_default
             while timeouts.queue:
                 deadline = timeouts.queue[0].deadline
                 if deadline > now:
-                    wait = min(deadline - now, sleep_default)
+                    secs = min(deadline - now, sleep_default)
                     break
-                timeout = timeouts.get()
-                send(timeout.data)
+                send(timeouts.get().data)
                 #print(data, flush=True)
-            #print('sleep', wait, file=sys.stderr)
-            time.sleep(wait)
+            #print('sleep', secs, file=sys.stderr)
+            time.sleep(secs)
     threading.Thread(target=consumer).start()
 
     n = _struct_number.size
@@ -88,9 +87,36 @@ def server():
 
 
 def server_():
-    pass
+    from heapq import heappush, heappop
+    from posix_ipc import BusyError
+    timeouts = []
+
+    n = _struct_number.size
+    unpack = _struct_number.unpack
+    wait = _init_mq(54320).receive
+    send = _init_mq(54321).send
+
+    while True:
+        while timeouts:
+            deadline = timeouts[0].deadline
+            secs = deadline - time.monotonic()
+            if secs > 0:
+                break
+            send(heappop(timeouts).data)
+        else:
+            secs = None
+        try:
+            data = wait(secs)[0]
+        except BusyError:
+            continue
+        delay, = unpack(data[:n])
+        deadline = time.monotonic() + delay
+        heappush(timeouts, Timeout(deadline, data[n:]))
+
+
 if not __debug__:
     server = server_
+
 
 def client():
     while True:
