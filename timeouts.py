@@ -86,6 +86,8 @@ def server():
 
 
 def server_():
+    import gc
+    gc.disable()
     from heapq import heappush, heappop
     from posix_ipc import BusyError
     timeouts = []
