@@ -128,8 +128,16 @@ def client():
 
 
 def test():
+    n = 0
+    t0 = int(time.monotonic())
     while True:
         print(pickle.loads(api.ready()))
+        n += 1
+        t1 = int(time.monotonic())
+        if t1 != t0:
+            print(n, file=sys.stderr)
+            t0 = t1
+            n = 0
 
 
 def loop():
