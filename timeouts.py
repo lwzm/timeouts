@@ -89,6 +89,7 @@ def server_():
     import gc
     gc.disable()
     from heapq import heappush, heappop
+    from time import monotonic
     from posix_ipc import BusyError
     timeouts = []
 
@@ -99,8 +100,7 @@ def server_():
 
     while True:
         while timeouts:
-            deadline = timeouts[0].deadline
-            secs = deadline - time.monotonic()
+            secs = timeouts[0].deadline - monotonic()
             if secs > 0:
                 break
             send(heappop(timeouts).data)
@@ -111,8 +111,7 @@ def server_():
         except BusyError:
             continue
         delay, = unpack(data[:n])
-        deadline = time.monotonic() + delay
-        heappush(timeouts, Timeout(deadline, data[n:]))
+        heappush(timeouts, Timeout(monotonic() + delay, data[n:]))
 
 
 if not __debug__:
