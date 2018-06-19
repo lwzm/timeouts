@@ -141,8 +141,10 @@ def test():
 def loop():
     import this
     import traceback
+
+    ready = api.ready
     while True:
-        task = api.ready()
+        task = ready()
         try:
             m = task.pop(">")
             m = getattr(this, m)
