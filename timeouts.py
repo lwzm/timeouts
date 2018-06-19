@@ -70,8 +70,6 @@ def server():
                     secs = min(deadline - now, sleep_default)
                     break
                 send(timeouts.get().data)
-                #print(data, flush=True)
-            #print('sleep', secs, file=sys.stderr)
             time.sleep(secs)
     threading.Thread(target=consumer).start()
 
@@ -114,7 +112,7 @@ def server_():
         heappush(timeouts, Timeout(monotonic() + delay, data[n:]))
 
 
-if not __debug__:
+if sys.platform == "linux" and not __debug__:
     server = server_
 
 
