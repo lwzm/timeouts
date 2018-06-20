@@ -42,7 +42,7 @@ class Api(object):
 
     def schedule(self, delay, value):
         data = self._pack(delay) + pickle.dumps(value)
-        self._send(data)
+        self._send(data, 5)
 
     def ready(self):
         return self._wait()[0]
