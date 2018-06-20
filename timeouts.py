@@ -141,10 +141,10 @@ def test():
 def loop():
     import this
     import traceback
+    from pickle import ready
 
-    ready = api.ready
     while True:
-        task = ready()
+        task = pickle.loads(api.ready())
         try:
             m = task.pop(">")
             m = getattr(this, m)
