@@ -141,7 +141,6 @@ def test():
 def loop():
     import this
     import traceback
-    from pickle import ready
 
     while True:
         task = pickle.loads(api.ready())
