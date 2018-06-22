@@ -140,6 +140,7 @@ def test():
 
 def loop():
     import this
+    this.load_modules()
     import traceback
 
     while True:
