@@ -94,19 +94,24 @@ def server_():
     n = _struct_number.size
     unpack = _struct_number.unpack
     _0, _1 = _init_mq(54320), _init_mq(54321)
+    _1.block = False
     wait = _0.receive
     send = _1.send
 
+    warning = int(monotonic())
     while True:
         while timeouts:
             todo = timeouts[0]
-            secs = todo.deadline - monotonic()
+            now = monotonic()
+            secs = todo.deadline - now
             if secs > 0:
                 break
             try:
-                send(todo.data, 0.1)
+                send(todo.data)
             except BusyError:
-                print(time.strftime("%Y-%m-%dT%H:%M:%S"), "busy", _1.current_messages, len(timeouts), file=sys.stderr)
+                if int(now) != warning:
+                    warning = int(now)
+                    print(time.strftime("%Y-%m-%dT%H:%M:%S"), _0.current_messages, _1.current_messages, len(timeouts), file=sys.stderr)
                 secs = 0
                 break
             heappop(timeouts)
