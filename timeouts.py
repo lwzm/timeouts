@@ -106,7 +106,7 @@ def server_():
             try:
                 send(todo.data, 0.1)
             except BusyError:
-                print(time.strftime("%Y-%m-%dT%H:%M:%S"), "busy", _1.current_messages, file=sys.stderr)
+                print(time.strftime("%Y-%m-%dT%H:%M:%S"), "busy", _1.current_messages, len(timeouts), file=sys.stderr)
                 secs = 0
                 break
             heappop(timeouts)
