@@ -38,8 +38,10 @@ def _init_mq(n, **kw):
 class Api(object):
     def __init__(self):
         self._pack = _struct_number.pack
-        self._send = _init_mq(54320).send
-        self._wait = _init_mq(54321).receive
+        self._0 = _init_mq(54320)
+        self._1 = _init_mq(54321)
+        self._send = self._0.send
+        self._wait = self._1.receive
 
     def schedule(self, delay, value):
         data = self._pack(delay) + pickle.dumps(value)
@@ -50,6 +52,7 @@ class Api(object):
 
 
 api = Api()
+
 
 def schedule(delay, next, **value):
     value[">"] = next
@@ -91,6 +94,7 @@ def server_():
     from time import monotonic
     from posix_ipc import BusyError, SignalError
     timeouts = []
+    _0, _1 = api._0, api._1
 
     def report(*_):
         print(time.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -103,7 +107,6 @@ def server_():
 
     n = _struct_number.size
     unpack = _struct_number.unpack
-    _0, _1 = _init_mq(54320, write=False), _init_mq(54321, read=False)
     _1.block = False
     wait = _0.receive
     send = _1.send
