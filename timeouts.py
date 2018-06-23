@@ -5,6 +5,7 @@ import pickle
 import queue
 import random
 import struct
+import signal
 import sys
 import threading
 import time
@@ -88,8 +89,17 @@ def server_():
     gc.disable()
     from heapq import heappush, heappop
     from time import monotonic
-    from posix_ipc import BusyError
+    from posix_ipc import BusyError, SignalError
     timeouts = []
+
+    def report(*_):
+        print(time.strftime("%Y-%m-%dT%H:%M:%S"),
+              _0.current_messages,
+              _1.current_messages,
+              len(timeouts),
+              file=sys.stderr)
+
+    signal.signal(signal.SIGHUP, report)
 
     n = _struct_number.size
     unpack = _struct_number.unpack
@@ -111,7 +121,7 @@ def server_():
             except BusyError:
                 if int(now) != warning:
                     warning = int(now)
-                    print(time.strftime("%Y-%m-%dT%H:%M:%S"), _0.current_messages, _1.current_messages, len(timeouts), file=sys.stderr)
+                    report()
                 secs = 0
                 break
             heappop(timeouts)
@@ -119,7 +129,7 @@ def server_():
             secs = None
         try:
             data = wait(secs)[0]
-        except BusyError:
+        except (BusyError, SignalError):
             continue
         delay, = unpack(data[:n])
         heappush(timeouts, Timeout(monotonic() + delay, data[n:]))
