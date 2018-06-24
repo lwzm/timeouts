@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 
+"""
+When production on Linux, you should init message queues:
+
+    rm -f /dev/mqueue/.5432?
+    posix_ipc.MessageQueue("/.54320", os.O_CREAT, max_messages=100, max_message_size=2**11)
+    posix_ipc.MessageQueue("/.54321", os.O_CREAT, max_messages=100, max_message_size=2**11)
+
+    python -O -m timeouts s
+"""
+
 import os
 import pickle
 import queue
 import random
-import struct
 import signal
+import struct
 import sys
 import threading
 import time
@@ -26,11 +36,6 @@ class Timeout():
 
 
 def _init_mq(n):
-    """
-    mq0 = posix_ipc.MessageQueue("/.54320", os.O_CREAT, max_messages=100, max_message_size=2**11)
-    mq1 = posix_ipc.MessageQueue("/.54321", os.O_CREAT, max_messages=100, max_message_size=2**11)
-    """
-
     try:
         from posix_ipc import MessageQueue
         key = f"/.{n}"
@@ -108,7 +113,7 @@ def server_():
               len(timeouts),
               file=sys.stderr)
 
-    signal.signal(signal.SIGTSTP, report)
+    signal.signal(signal.SIGTSTP, report)  # Ctrl-Z
 
     n = _struct_number.size
     unpack = _struct_number.unpack
@@ -190,7 +195,6 @@ if __name__ == "__main__":
     except IndexError:
         fn = "?"
     if fn == "s":
-        # pypy is better
         server()
     elif fn == "c":
         client()
