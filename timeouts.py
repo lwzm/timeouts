@@ -108,7 +108,7 @@ def server_():
               len(timeouts),
               file=sys.stderr)
 
-    signal.signal(signal.SIGHUP, report)
+    signal.signal(signal.SIGTSTP, report)
 
     n = _struct_number.size
     unpack = _struct_number.unpack
