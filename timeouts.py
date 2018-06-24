@@ -25,14 +25,19 @@ class Timeout():
         return self.deadline < other.deadline
 
 
-def _init_mq(n, **kw):
+def _init_mq(n):
+    """
+    mq0 = posix_ipc.MessageQueue("/.54320", os.O_CREAT, max_messages=100, max_message_size=2**11)
+    mq1 = posix_ipc.MessageQueue("/.54321", os.O_CREAT, max_messages=100, max_message_size=2**11)
+    """
+
     try:
         from posix_ipc import MessageQueue
         key = f"/.{n}"
     except ImportError:
         from sysv_ipc import MessageQueue
         key = n
-    return MessageQueue(key, flags=os.O_CREAT, **kw)
+    return MessageQueue(key, flags=os.O_CREAT)
 
 
 class Api(object):
