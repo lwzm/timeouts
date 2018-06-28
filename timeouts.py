@@ -48,16 +48,21 @@ def _init_mq(n, **kw):
 class Api(object):
     def __init__(self):
         self._pack = _struct_number.pack
-        self._0 = _init_mq(54320)
-        self._1 = _init_mq(54321)
-        self._send = self._0.send
-        self._wait = self._1.receive
+        self._send = self._wait = None
+
+    def _init(self):
+        self._send = _init_mq(54320).send
+        self._wait = _init_mq(54321).receive
 
     def schedule(self, delay, value):
+        if self._send is None:
+            self._init()
         data = self._pack(delay) + pickle.dumps(value)
         self._send(data, 5)
 
     def ready(self):
+        if self._wait is None:
+            self._init()
         return self._wait()[0]
 
 
