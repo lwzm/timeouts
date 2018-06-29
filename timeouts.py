@@ -181,25 +181,24 @@ def test():
 
 
 def loop():
-    import this
-    this.load_modules()
-    import traceback
+    from importlib import import_module
+    from traceback import print_exc
 
     while True:
         task = pickle.loads(api.ready())
         try:
             m = task.pop(">")
-            m = getattr(this, m)
+            m = import_module(f"this.{m}")
             m.do(**task)
         except Exception:
-            traceback.print_exc()
+            print_exc()
 
 
 if __name__ == "__main__":
     try:
         fn = sys.argv[1]
     except IndexError:
-        fn = "?"
+        sys.exit(1)
     if fn == "s":
         server()
     elif fn == "c":
@@ -209,4 +208,4 @@ if __name__ == "__main__":
     elif fn == "run":
         loop()
     else:
-        pass
+        sys.exit(2)
