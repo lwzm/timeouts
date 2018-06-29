@@ -63,7 +63,7 @@ class Api(object):
     def ready(self):
         if self._wait is None:
             self._init()
-        return self._wait()[0]
+        return pickle.loads(self._wait()[0])
 
 
 api = Api()
@@ -171,7 +171,7 @@ def test():
     n = 0
     t0 = int(time.monotonic())
     while True:
-        print(pickle.loads(api.ready()))
+        print(api.ready())
         n += 1
         t1 = int(time.monotonic())
         if t1 != t0:
@@ -185,7 +185,7 @@ def loop():
     from traceback import print_exc
 
     while True:
-        task = pickle.loads(api.ready())
+        task = api.ready()
         try:
             m = task.pop(">")
             m = import_module(f"this.{m}")
