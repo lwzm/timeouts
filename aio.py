@@ -5,10 +5,12 @@ test asyncio and uvloop
 """
 
 import asyncio
+import gc
 import os
 import struct
 
 import uvloop
+
 
 asyncio.set_event_loop(uvloop.new_event_loop())
 
@@ -26,6 +28,7 @@ def _init_mq(n, **kw):
 
 
 def server():
+    gc.disable()
     loop = asyncio.get_event_loop()
     _0 = _init_mq(54320, write=False)
     _1 = _init_mq(54321, read=False)
