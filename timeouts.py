@@ -124,8 +124,8 @@ def server_():
 
     n = _struct_number.size
     unpack = _struct_number.unpack
-    wait = _0.receive
-    send = _1.send
+    read = _0.receive
+    write = _1.send
 
     warning = int(monotonic())
     while True:
@@ -136,7 +136,7 @@ def server_():
             if secs > 0:
                 break
             try:
-                send(todo.data)
+                write(todo.data)
             except BusyError:
                 if int(now) != warning:
                     warning = int(now)
@@ -147,7 +147,7 @@ def server_():
         else:
             secs = None
         try:
-            data = wait(secs)[0]
+            data = read(secs)[0]
         except (BusyError, SignalError):
             continue
         delay, = unpack(data[:n])
