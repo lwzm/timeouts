@@ -4,15 +4,13 @@
 test asyncio and uvloop
 """
 
-import os
-import random
-import struct
-import sys
-import time
-
 import asyncio
+import os
+import struct
+
 import uvloop
-#asyncio.set_event_loop(uvloop.new_event_loop())
+
+asyncio.set_event_loop(uvloop.new_event_loop())
 
 _struct_number = struct.Struct("!f")
 
@@ -34,16 +32,15 @@ def server():
 
     n = _struct_number.size
     unpack = _struct_number.unpack
+    send = _1.send
+    receive = _0.receive
 
-    def send(data):
-        _1.send(data)
-
-    def receive():
-        data = _0.receive()[0]
+    def ready():
+        data = receive()[0]
         delay, = unpack(data[:n])
         loop.call_later(delay, send, data[n:])
 
-    loop.add_reader(_0.mqd, receive)
+    loop.add_reader(_0.mqd, ready)
     loop.run_forever()
 
 

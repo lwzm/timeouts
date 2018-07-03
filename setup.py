@@ -9,6 +9,6 @@ from setuptools import setup
 
 setup(
     name="timeouts",
-    version="1.7",
+    version="1.8",
     py_modules=['timeouts'],
 )
