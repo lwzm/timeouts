@@ -2,6 +2,10 @@
 
 """
 test asyncio and uvloop
+
+after set gc.disable, performance improved
+
+develop version, perhaps dead lock if _1.send is blocking
 """
 
 import asyncio
