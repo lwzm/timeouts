@@ -4,8 +4,8 @@
 When production on Linux, you should init message queues:
 
     rm -f /dev/mqueue/.5432?
-    posix_ipc.MessageQueue("/.54320", os.O_CREAT, max_messages=100, max_message_size=2**11)
-    posix_ipc.MessageQueue("/.54321", os.O_CREAT, max_messages=100, max_message_size=2**11)
+    posix_ipc.MessageQueue("/.54320", os.O_CREAT, max_messages=100, max_message_size=2048)
+    posix_ipc.MessageQueue("/.54321", os.O_CREAT, max_messages=100, max_message_size=2048)
 
     python -O -m timeouts s
 """
