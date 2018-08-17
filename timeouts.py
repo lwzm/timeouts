@@ -127,7 +127,7 @@ def server_():
     read = _0.receive
     write = _1.send
 
-    warning = int(monotonic())
+    warning = monotonic()
     while True:
         while timeouts:
             todo = timeouts[0]
@@ -138,8 +138,8 @@ def server_():
             try:
                 write(todo.data)
             except BusyError:
-                if int(now) != warning:
-                    warning = int(now)
+                if now - warning > 1.0:
+                    warning = now
                     report()
                 secs = 0
                 break
