@@ -4,3 +4,13 @@ gcc -shared -pthread -fPIC -fwrapv -O3 -Wall -fno-strict-aliasing \
 exit
 
 python -O -c 'import timeouts; timeouts.server()'
+
+or
+
+edit start.py
+```
+import timeouts
+timeouts.server()
+```
+
+python -O -c 'import start'
